@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>实时加密货币看板</title>
+    <style>
+        /* 这次我们用科技感十足的暗黑金融风 */
+        body { font-family: 'Courier New', Courier, monospace; background-color: #121212; color: #00ffcc; text-align: center; padding-top: 50px; margin: 0; }
+        .dashboard { background: #1e1e1e; padding: 30px; border-radius: 12px; box-shadow: 0 0 20px rgba(0, 255, 204, 0.2); display: inline-block; max-width: 500px; width: 90%; border: 1px solid #333; }
+        h1 { margin-top: 0; color: #fff; font-family: 'Segoe UI', Tahoma, sans-serif; }
+        .price-box { background: #2a2a2a; margin: 15px 0; padding: 20px; border-radius: 8px; font-size: 24px; display: flex; justify-content: space-between; align-items: center; border-left: 5px solid #00ffcc; transition: 0.3s; }
+        .price-box:hover { transform: scale(1.02); background: #333; }
+        .coin-name { font-weight: bold; color: #fff; font-family: 'Segoe UI', sans-serif; }
+        .coin-price { font-weight: bold; text-shadow: 0 0 5px rgba(0,255,204,0.5); }
+        button { margin-top: 20px; font-size: 16px; font-weight: bold; padding: 12px 30px; cursor: pointer; background-color: #00ffcc; color: #121212; border: none; border-radius: 50px; transition: 0.3s; }
+        button:hover { background-color: #00cca3; box-shadow: 0 0 15px rgba(0,255,204,0.6); }
+        #timestamp { margin-top: 20px; font-size: 12px; color: #888; }
+        .error { color: #ff4d4d; font-size: 14px; margin-top: 10px; display: none; }
+    </style>
+</head>
+<body>
+
+    <div class="dashboard">
+        <h1>📊 实时行情看板</h1>
+        
+        <div class="price-box">
+            <span class="coin-name">🟠 Bitcoin (BTC)</span>
+            <span class="coin-price" id="btc-price">载入中...</span>
+        </div>
+        
+        <div class="price-box">
+            <span class="coin-name">🔵 Ethereum (ETH)</span>
+            <span class="coin-price" id="eth-price">载入中...</span>
+        </div>
+        
+        <div class="price-box">
+            <span class="coin-name">🟡 Dogecoin (DOGE)</span>
+            <span class="coin-price" id="doge-price">载入中...</span>
+        </div>
+
+        <div id="error-msg" class="error">⚠️ 获取数据失败，API 可能遇到限制，请稍后再试。</div>
+        
+        <button onclick="fetchCryptoPrices()">🔄 刷新最新价格</button>
+        <div id="timestamp">最后更新: 尚未获取</div>
+    </div>
+
+    <script>
+        // 核心商业逻辑：向外部 API 请求三种货币的美元价格
+        function fetchCryptoPrices() {
+            // 让按钮在刷新时有视觉反馈
+            document.getElementById('btc-price').innerText = "获取中...";
+            document.getElementById('eth-price').innerText = "获取中...";
+            document.getElementById('doge-price').innerText = "获取中...";
+            document.getElementById('error-msg').style.display = "none";
+
+            // 这是 CoinGecko 的公开 API 网址
+            const apiUrl = 'https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum,dogecoin&vs_currencies=usd';
+
+            fetch(apiUrl)
+                .then(response => {
+                    if (!response.ok) throw new Error("API 请求太频繁或网络错误");
+                    return response.json();
+                })
+                .then(data => {
+                    // 拿到数据后，把数字格式化成带逗号的美金格式，并塞回网页里
+                    document.getElementById('btc-price').innerText = "$" + data.bitcoin.usd.toLocaleString();
+                    document.getElementById('eth-price').innerText = "$" + data.ethereum.usd.toLocaleString();
+                    document.getElementById('doge-price').innerText = "$" + data.dogecoin.usd.toLocaleString();
+                    
+                    // 记录一下获取成功的时间
+                    const now = new Date();
+                    document.getElementById('timestamp').innerText = "最后更新: " + now.toLocaleTimeString();
+                })
+                .catch(error => {
+                    // 如果由于刷新太快被 API 服务器拒绝，显示错误提示
+                    console.error("出错了:", error);
+                    document.getElementById('btc-price').innerText = "---";
+                    document.getElementById('eth-price').innerText = "---";
+                    document.getElementById('doge-price').innerText = "---";
+                    document.getElementById('error-msg').style.display = "block";
+                });
+        }
+
+        // 网页一打开，就自动执行一次抓取功能
+        window.onload = fetchCryptoPrices;
+    </script>
+
+</body>
+</html>
